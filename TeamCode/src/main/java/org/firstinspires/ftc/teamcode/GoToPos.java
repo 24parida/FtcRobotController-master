@@ -6,17 +6,18 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 // Field Centric Drive using odometry to get angle
-class FieldCentricDrive extends LinearOpMode {
+class GoToPos extends LinearOpMode {
 
     private MecanumDrive m_drive;
-    private MotorEx frontLeft, backRight, frontRight, backLeft;
+    private DcMotorEx frontLeft, frontRight, backLeft, backRight;
     private MotorEx encoderLeft, encoderRight, encoderPerp;
     private GamepadEx gamepadEx;
     private double strafeSpeed, forwardSpeed, turnSpeed, angle;
 
-    public static final double WHEEL_DIAMETER = 1.96850394;
+    public static final double WHEEL_DIAMETER = 4.0;
     public static final double TICKS_PER_REV = 28;
 
     static final double TRACKWIDTH = 13.7;
@@ -26,10 +27,10 @@ class FieldCentricDrive extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         //drive motors
-        frontLeft = new MotorEx(hardwareMap, "front_left");
-        frontRight = new MotorEx(hardwareMap, "front_right");
-        backLeft = new MotorEx(hardwareMap, "back_left");
-        backRight = new MotorEx(hardwareMap, "back_right");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "leftFront");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        backRight =hardwareMap.get(DcMotorEx.class, "backRight");
 
         //odometry
         encoderLeft = new MotorEx(hardwareMap, "left_encoder");
@@ -53,20 +54,13 @@ class FieldCentricDrive extends LinearOpMode {
         OdometrySubsystem odometry = new OdometrySubsystem(holOdom);
 
         //just some object deceleration
-        m_drive = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
         GamepadEx gamepadEx1 = new GamepadEx(gamepad1);
 
         waitForStart();
 
 
         while(opModeIsActive()) {
-            //tele-op drive
-            strafeSpeed = gamepadEx1.getLeftX();
-            forwardSpeed = gamepadEx1.getLeftY();
-            turnSpeed = gamepadEx1.getRightX();
-            angle = odometry.getPose().getHeading();
 
-            m_drive.driveFieldCentric(strafeSpeed, forwardSpeed, turnSpeed, angle);
         }
     }
 
