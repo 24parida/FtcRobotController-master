@@ -1,68 +1,70 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.command.OdometrySubsystem;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
-import com.arcrobotics.ftclib.gamepad.GamepadKeys;
-import com.arcrobotics.ftclib.hardware.RevIMU;
-import com.arcrobotics.ftclib.hardware.ServoEx;
-import com.arcrobotics.ftclib.hardware.SimpleServo;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+// Field Centric Drive using odometry to get angle
 class FieldCentricDrive extends LinearOpMode {
 
     private MecanumDrive m_drive;
-    private Motor frontLeft, frontRight, backLeft, backRight, shooterRight, shooterLeft, intake;
-    private ServoEx flipperRight, flipperLeft, armLeft, armRight, gripperLeft, gripperRight;
+    private MotorEx frontLeft, backRight, frontRight, backLeft;
+    private MotorEx encoderLeft, encoderRight, encoderPerp;
     private GamepadEx gamepadEx;
-    private RevIMU gyro;
-    double strafeSpeed, forwardSpeed, turnSpeed, angle;
-    double flipperEndPos, flipperStartPos;
-    double armEndPos, armStartPos, gripperEnd, gripperStart;
+    private double strafeSpeed, forwardSpeed, turnSpeed, angle;
+
+    public static final double WHEEL_DIAMETER = 4.0;
+    public static final double TICKS_PER_REV = 28;
+
+    static final double TRACKWIDTH = 13.7;
+    static final double TICKS_TO_INCHES = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
+    static final double CENTER_WHEEL_OFFSET = 2.4;
 
     @Override
     public void runOpMode() throws InterruptedException {
         //drive motors
-        frontLeft = new Motor(hardwareMap, "front_left");
-        frontRight = new Motor(hardwareMap, "front_right");
-        backLeft = new Motor(hardwareMap, "back_left");
-        backRight = new Motor(hardwareMap, "back_right");
-        //shooter + intake motors
-        shooterRight = new Motor(hardwareMap, "shooter_right");
-        shooterLeft = new Motor(hardwareMap, "shooter_left");
-        intake = new Motor(hardwareMap, "intake");
-        //Indexer servos
-        flipperRight = new SimpleServo(hardwareMap, "flipperRight");
-        flipperLeft = new SimpleServo(hardwareMap, "flipperLeft");
-        //armservos
-        armLeft = new SimpleServo(hardwareMap, "armLeft");
-        armRight = new SimpleServo(hardwareMap, "armRight");
-        gripperLeft = new SimpleServo(hardwareMap, "gripperLeft");
-        gripperRight = new SimpleServo(hardwareMap, "gripperRight");
+        frontLeft = new MotorEx(hardwareMap, "front_left");
+        frontRight = new MotorEx(hardwareMap, "front_right");
+        backLeft = new MotorEx(hardwareMap, "back_left");
+        backRight = new MotorEx(hardwareMap, "back_right");
 
-        //just some object declerations
+        //odometry
+        encoderLeft = new MotorEx(hardwareMap, "left_encoder");
+        encoderRight = new MotorEx(hardwareMap, "right_encoder");
+        encoderPerp = new MotorEx(hardwareMap, "center_encoder");
+
+        //encoder pulse definition
+        encoderLeft.setDistancePerPulse(TICKS_TO_INCHES);
+        encoderRight.setDistancePerPulse(TICKS_TO_INCHES);
+        encoderPerp.setDistancePerPulse(TICKS_TO_INCHES);
+
+        // create the odometry object
+        HolonomicOdometry holOdom = new HolonomicOdometry(
+                encoderLeft::getDistance,
+                encoderRight::getDistance,
+                encoderPerp::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+
+        // create the odometry subsystem
+        OdometrySubsystem odometry = new OdometrySubsystem(holOdom);
+
+        //just some object deceleration
         m_drive = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
         GamepadEx gamepadEx1 = new GamepadEx(gamepad1);
-        GamepadEx gamepadEx2 = new GamepadEx(gamepad2);
-
-        gyro = new RevIMU(hardwareMap, "gyro");
-
-        shooterRight.setRunMode(Motor.RunMode.VelocityControl);
 
         waitForStart();
 
 
         while(opModeIsActive()) {
-            //shooter testing
-            if (gamepadEx1.getButton(GamepadKeys.Button.X)) {
-
-            }
-
-            //teleopDrive
+            //tele-op drive
             strafeSpeed = gamepadEx1.getLeftX();
             forwardSpeed = gamepadEx1.getLeftY();
             turnSpeed = gamepadEx1.getRightX();
-            angle = gyro.getAbsoluteHeading();
+            angle = odometry.getPose().getHeading();
 
             m_drive.driveFieldCentric(strafeSpeed, forwardSpeed, turnSpeed, angle);
         }
