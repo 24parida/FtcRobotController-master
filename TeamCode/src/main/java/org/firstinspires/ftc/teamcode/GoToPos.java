@@ -1,28 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.arcrobotics.ftclib.command.OdometrySubsystem;
-import com.arcrobotics.ftclib.drivebase.MecanumDrive;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
-import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+
 // Field Centric Drive using odometry to get angle
-class GoToPos extends LinearOpMode {
+class GoToPos extends LinearOpMode{
 
-    private MecanumDrive m_drive;
     private DcMotorEx frontLeft, frontRight, backLeft, backRight;
-    private MotorEx encoderLeft, encoderRight, encoderPerp;
-    private GamepadEx gamepadEx;
-    private double strafeSpeed, forwardSpeed, turnSpeed, angle;
-
-    public static final double WHEEL_DIAMETER = 4.0;
-    public static final double TICKS_PER_REV = 28;
-
-    static final double TRACKWIDTH = 13.7;
-    static final double TICKS_TO_INCHES = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
-    static final double CENTER_WHEEL_OFFSET = 2.4;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -32,34 +22,24 @@ class GoToPos extends LinearOpMode {
         backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
         backRight =hardwareMap.get(DcMotorEx.class, "backRight");
 
-        //odometry
-        encoderLeft = new MotorEx(hardwareMap, "left_encoder");
-        encoderRight = new MotorEx(hardwareMap, "right_encoder");
-        encoderPerp = new MotorEx(hardwareMap, "center_encoder");
-
-        //encoder pulse definition
-        encoderLeft.setDistancePerPulse(TICKS_TO_INCHES);
-        encoderRight.setDistancePerPulse(TICKS_TO_INCHES);
-        encoderPerp.setDistancePerPulse(TICKS_TO_INCHES);
-
-        // create the odometry object
-        HolonomicOdometry holOdom = new HolonomicOdometry(
-                encoderLeft::getDistance,
-                encoderRight::getDistance,
-                encoderPerp::getDistance,
-                TRACKWIDTH, CENTER_WHEEL_OFFSET
-        );
-
-        // create the odometry subsystem
-        OdometrySubsystem odometry = new OdometrySubsystem(holOdom);
 
         //just some object deceleration
         GamepadEx gamepadEx1 = new GamepadEx(gamepad1);
+
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+        Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
+                .lineToLinearHeading(new Pose2d(40, 40, Math.toRadians(90)))
+                .build();
 
         waitForStart();
 
 
         while(opModeIsActive()) {
+            if (gamepadEx1.getButton(GamepadKeys.Button.X)) {
+
+                drive.followTrajectory(myTrajectory);
+
 
         }
     }
