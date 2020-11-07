@@ -1,42 +1,43 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+import java.lang.annotation.Documented;
 
 //shooter test is a class to run the shooter motor with encoders in order to keep velocity constant
-class ShooterTest extends LinearOpMode {
-
-    private MotorEx shooterRight, shooterLeft;
-    public static final double WHEEL_DIAMETER = 4.0;
-    public static final double TICKS_PER_REV = 28;
+@TeleOp(name="Shooter Test", group="Tests")
+public class ShooterTest extends LinearOpMode{
 
 
-    private static final double TICKS_TO_INCHES = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
-
+    private DcMotor shooterRight = null;
+    private DcMotor shooterLeft = null;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        //shooter motor deceleration
-        shooterRight = new MotorEx(hardwareMap, "shooter_right");
-        shooterLeft = new MotorEx(hardwareMap, "shooter_left");
-
-        //encoder ticks/inches
-        shooterRight.setDistancePerPulse(TICKS_TO_INCHES);
-        shooterLeft.setDistancePerPulse(TICKS_TO_INCHES);
-
-        //make sure that motors don't slip while stopped
-        shooterRight.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        shooterLeft.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        shooterRight =  hardwareMap.get(DcMotor.class, "shootingMotorRight");
+        shooterLeft = hardwareMap.get(DcMotor.class, "shootingMotorLeft");
 
         //RUN_USING_ENCODER
-        shooterLeft.setRunMode(Motor.RunMode.VelocityControl);
-        shooterRight.setRunMode(Motor.RunMode.VelocityControl);
+        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        while(opModeIsActive()) {
-            //5202 1:1 motor || ticks per rev * rpm * seconds / minute * percentage
-            shooterLeft.setVelocity(7 * 6000 * 60 * 0.9);
-            shooterRight.setVelocity(0);
+        GamepadEx gamepadEx2 = new GamepadEx(gamepad2);
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            if (gamepadEx2.getButton(GamepadKeys.Button.A)) {
+                shooterRight.setPower(1);
+                shooterLeft.setPower(0);
+            }
+            if (gamepadEx2.getButton(GamepadKeys.Button.B)) {
+                shooterRight.setPower(0);
+                shooterLeft.setPower(0);
+            }
         }
     }
 }
