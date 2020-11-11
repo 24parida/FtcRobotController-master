@@ -71,14 +71,14 @@ public class FieldCentricDrive extends LinearOpMode {
         GamepadEx gamepadEx1 = new GamepadEx(gamepad1);
 
         waitForStart();
-
+        gyro.reset();
         gyro.init();
 
         while(opModeIsActive()) {
             //tele-op drive
-            strafeSpeed = gamepadEx1.getLeftX();
-            forwardSpeed = gamepadEx1.getLeftY();
-            turnSpeed = gamepadEx1.getRightX();
+            strafeSpeed = 0.2 * gamepadEx1.getLeftX();
+            forwardSpeed = 0.2 * gamepadEx1.getLeftY();
+            turnSpeed = 0.2 * gamepadEx1.getRightX();
             angle = gyro.getAbsoluteHeading();
 
             m_drive.driveFieldCentric(strafeSpeed, forwardSpeed, turnSpeed, angle);

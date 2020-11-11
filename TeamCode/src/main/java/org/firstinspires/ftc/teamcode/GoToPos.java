@@ -19,10 +19,10 @@ class GoToPos extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         //drive motors
-        frontLeft = hardwareMap.get(DcMotorEx.class, "leftFront");
-        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "motor_fl");
+        frontRight = hardwareMap.get(DcMotorEx.class, "motor_fr");
+        backLeft = hardwareMap.get(DcMotorEx.class, "motor_rl");
+        backRight = hardwareMap.get(DcMotorEx.class, "motor_rr");
 
 
         //just some object deceleration
@@ -37,15 +37,6 @@ class GoToPos extends LinearOpMode {
         waitForStart();
 
 
-        while (opModeIsActive()) {
-            if (gamepadEx1.getButton(GamepadKeys.Button.X)) {
-
-                drive.followTrajectory(myTrajectory);
-
-
-            }
-        }
-
-
+        while (opModeIsActive()) {if (gamepadEx1.getButton(GamepadKeys.Button.X)) {drive.followTrajectory(myTrajectory);}}
     }
 }

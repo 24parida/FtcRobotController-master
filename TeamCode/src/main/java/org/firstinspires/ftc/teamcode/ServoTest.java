@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.ServoEx;
@@ -11,83 +12,63 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 public class ServoTest extends LinearOpMode {
 
-    private ServoEx flipperServo, arm;
+    private ServoEx flipperServo;
+    private ButtonReader flickRead, flickRead1, flickRead2, servoInc, servoDec;
+    private int sleep;
+    private double pos;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        //Indexer servos
-        flipperServo = new SimpleServo(hardwareMap, "liftServo");
-        arm = new SimpleServo(hardwareMap, "grabServo");
+        //Indexer servo
+        flipperServo = new SimpleServo(hardwareMap, "leftFlipper");
 
         GamepadEx gamepadEx1 = new GamepadEx(gamepad1);
         GamepadEx gamepadEx2 = new GamepadEx(gamepad2);
-        double pos = 0.0;
-        double pos1 = 0.0;
+
+        flickRead =  new ButtonReader(gamepadEx1, GamepadKeys.Button.X);
+        flickRead1 =  new ButtonReader(gamepadEx1, GamepadKeys.Button.Y);
+        flickRead2 =  new ButtonReader(gamepadEx1, GamepadKeys.Button.B);
+        servoDec = new ButtonReader(gamepadEx2, GamepadKeys.Button.A);
+        servoInc = new ButtonReader(gamepadEx2, GamepadKeys.Button.X);
 
 
+        sleep = 1000;
+        pos = 0.4;
         waitForStart();
-
         while(opModeIsActive()) {
-            if (gamepadEx1.getButton(GamepadKeys.Button.X)) {
-                flipperServo.setPosition(0);
-                telemetry.addData("servo pos: ", 0);
-                telemetry.update();
+            flickRead.readValue();
+            flickRead1.readValue();
+            flickRead2.readValue();
+            servoDec.readValue();
+            servoInc.readValue();
 
+            if(servoInc.wasJustReleased()) {
+                pos = pos + 0.025;
+                telemetry.addData("pos: ", pos);
+                telemetry.update();
             }
-            if (gamepadEx1.getButton(GamepadKeys.Button.A)) {
-                pos=pos+0.01;
+            if(servoDec.wasJustReleased()) {
+                pos = pos - 0.025;
+                telemetry.addData("pos: ", pos);
+                telemetry.update();
+            }
+
+            if(flickRead2.wasJustReleased()) {
+                sleep = sleep + 100;
+                telemetry.addData("sleep: ", sleep);
+                telemetry.update();
+            }
+             if(flickRead1.wasJustReleased()) {
+                 sleep = sleep - 100;
+                 telemetry.addData("sleep: ", sleep);
+                 telemetry.update();
+             }
+
+            if(flickRead.wasJustReleased()){
+                flipperServo.setPosition(0.224);
+                sleep(sleep);
                 flipperServo.setPosition(pos);
-                telemetry.addData("servo pos: ", pos);
-                telemetry.update();
-
             }
-
-            if (gamepadEx1.getButton(GamepadKeys.Button.B)) {
-                pos = pos - 0.01;
-                flipperServo.setPosition(pos);
-
-                telemetry.addData("servo pos: ", pos);
-                telemetry.update();
-            }
-            if (gamepadEx1.getButton(GamepadKeys.Button.Y)) {
-                flipperServo.setPosition(0.09);
-                flipperServo.setPosition(0);
-            }
-
-            if (gamepadEx1.getButton(GamepadKeys.Button.X)) {
-                flipperServo.setPosition(0);
-                telemetry.addData("servo pos: ", 0);
-                telemetry.update();
-
-            }
-
-
-
-
-            if (gamepadEx2.getButton(GamepadKeys.Button.A)) {
-                pos1 =pos1+0.01;
-                arm.setPosition(pos1);
-                telemetry.addData("servo pos1: ", pos1);
-                telemetry.update();
-            }
-            if (gamepadEx2.getButton(GamepadKeys.Button.B)) {
-                pos1 = pos1 - 0.01;
-                arm.setPosition(pos1);
-
-                telemetry.addData("servo pos1: ", pos1);
-                telemetry.update();
-            }
-            if (gamepadEx2.getButton(GamepadKeys.Button.Y)) {
-                arm.setPosition(0.09);
-                arm.setPosition(0);
-            }
-            if (gamepadEx2.getButton(GamepadKeys.Button.X)) {
-                arm.setPosition(0);
-                telemetry.addData("servo pos1: ", 0);
-                telemetry.update();
-            }
-
-        }
-
         }
     }
+}
