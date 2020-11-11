@@ -1,35 +1,20 @@
  package org.firstinspires.ftc.teamcode;
 
-import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
-import com.arcrobotics.ftclib.gamepad.TriggerReader;
-import com.arcrobotics.ftclib.hardware.RevIMU;
-import com.arcrobotics.ftclib.hardware.ServoEx;
-import com.arcrobotics.ftclib.hardware.SimpleServo;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import org.firstinspires.ftc.teamcode.Robot;
 
-@TeleOp(name="DriverCode Test", group="Tests")
+
+ @TeleOp(name="FSM test", group="Tests")
 public class FullJavaTelop extends LinearOpMode {
 
-    private MecanumDrive m_drive;
-    private Motor frontLeft, frontRight, backLeft, backRight, intake;
-    private ServoEx flipperServo, arm1, arm2, gripper1, gripper2;
     private GamepadEx gamepadEx1, gamepadEx2;
-    private RevIMU gyro;
-    private double strafeSpeed, forwardSpeed, turnSpeed, angle;
-    private DcMotor shooterRight = null;
-    private DcMotor shooterLeft = null;
-    private int arm1Down, arm2Down, grip1Down, grip2Down;
-    private ButtonReader lArm, rArm, lGrip, rGrip, gTPread, shooterStop;
-    private ButtonReader inIn, inOut, inStop, flickRead;
-    private TriggerReader shooterRev;
+    private ButtonReader lArm, rArm,gTPread;
+    private ButtonReader inOut, flickRead, inIn, inStop;
+    int rightArmState = 0;
+    int leftArmState = 0;
     public enum TeleOP {
         INTAKE,
         GOTOPOS,
@@ -42,30 +27,103 @@ public class FullJavaTelop extends LinearOpMode {
 
         Robot GEarheads = new Robot(hardwareMap);
         TeleOP teleop = TeleOP.INTAKE;
+
+        gamepadEx1 = new GamepadEx(gamepad1);
+        gamepadEx2 = new GamepadEx(gamepad2);
+
+        //gm1
+        lArm = new ButtonReader(gamepadEx1, GamepadKeys.Button.X);
+        rArm = new ButtonReader(gamepadEx1, GamepadKeys.Button.A);
+        gTPread = new ButtonReader(gamepadEx1, GamepadKeys.Button.DPAD_UP);
+
+        //gm2
+        inOut =  new ButtonReader(gamepadEx2, GamepadKeys.Button.Y);
+        inIn = new ButtonReader(gamepadEx2, GamepadKeys.Button.A);
+        flickRead = new ButtonReader(gamepadEx2, GamepadKeys.Button.X);
+        inStop = new ButtonReader(gamepadEx2, GamepadKeys.Button.B);
+
         waitForStart();
         GEarheads.gyroRest();
         while(opModeIsActive()) {
             lArm.readValue();
             rArm.readValue();
-            lGrip.readValue();
-            rGrip.readValue();
             gTPread.readValue();
-
-            shooterRev.readValue();
-            inIn.readValue();
             inOut.readValue();
-            inStop.readValue();
             flickRead.readValue();
-            shooterStop.readValue();
 
             switch (teleop) {
-                case TeleOP.INTAKE:
+                case INTAKE:
+                    telemetry.addData("state: ", "INTAKE");
+                    telemetry.update();
+                    GEarheads.intakeIN();
 
+                    while(inOut.isDown()) {
+                        GEarheads.intakeOUT();
+                    }
+
+                    while(inStop.isDown()){
+                        GEarheads.intakeSTOP();
+                    }
+
+                    if (gTPread.wasJustReleased()) {
+                        teleop = TeleOP.GOTOPOS;
+                    }
+                case GOTOPOS:
+                    telemetry.addData("state: ", "GoToPos");
+                    telemetry.update();
+                    GEarheads.intakeSTOP();
+                    GEarheads.gTP();
+                    teleop = TeleOP.SHOOT;
+                case  SHOOT:
+                    telemetry.addData("state: ", "Shoot");
+                    telemetry.update();
+                    if (flickRead.wasJustReleased()) {
+                        GEarheads.flip3();
+                        teleop = TeleOP.INTAKE;
+                    }
             }
 
+            if (inIn.wasJustReleased() && teleop != TeleOP.INTAKE) {
+                teleop = TeleOP.INTAKE;
+            }
+            if (rArm.wasJustReleased()) {
+                rightArmState = (rightArmState + 1) % 4;
+            }
+            if (lArm.wasJustReleased()) {
+                leftArmState = (leftArmState + 1) % 4;
+            }
+            switch (leftArmState) {
+                case 0:
+                    GEarheads.leftarm1();
+                    break;
+                case 1:
+                    GEarheads.leftarm2();
+                    break;
+                case 2:
+                    GEarheads.leftarm3();
+                    break;
+                case 3:
+                    GEarheads.leftarm4();
+                    break;
+            }
+
+            switch (rightArmState) {
+                case 0:
+                    GEarheads.rightarm1();;
+                    break;
+                case 1:
+                    GEarheads.rightarm2();;
+                    break;
+                case 2:
+                    GEarheads.rightarm3();
+                    break;
+                case 3:
+                    GEarheads.rightarm4();
+                    break;
+            }
 
             //tele-op drive
-           GEarheads.drive();
+           GEarheads.drive(gamepadEx1);
         }
     }
 }
