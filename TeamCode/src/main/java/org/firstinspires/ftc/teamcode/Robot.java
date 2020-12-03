@@ -10,6 +10,7 @@ import com.arcrobotics.ftclib.hardware.SimpleServo;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -29,10 +30,11 @@ public class Robot {
 
 
     public Robot (HardwareMap hardwareMap) {
-        frontLeft = new MotorEx(hardwareMap, "fl");
-        frontRight = new MotorEx(hardwareMap, "fr");
-        backLeft = new MotorEx(hardwareMap, "bl");
-        backRight = new MotorEx(hardwareMap, "br");
+        frontLeft = new MotorEx(hardwareMap, "motor_fl");
+        frontRight = new MotorEx(hardwareMap, "motor_fr");
+        backLeft = new MotorEx(hardwareMap, "motor_rl");
+        backRight = new MotorEx(hardwareMap, "motor_rr");
+
         time = new ElapsedTime();
 
         //gyro
@@ -70,6 +72,7 @@ public class Robot {
                 .build();
     }
     public void flip3() {
+        time.reset();
         while (time.milliseconds() < 2000) {}
         flipper.setPosition(0.270);
         time.reset();
@@ -90,12 +93,24 @@ public class Robot {
 
     }
 
+    public void rev(){
+        shooterLeft.setPower(-1);
+        shooterRight.setPower(-0.75);
+    }
+    public void flip(){
+        time.reset();
+        while (time.milliseconds() < 300) {}
+        flipper.setPosition(0.460);
+        time.reset();
+        while (time.milliseconds() < 600) {}
+        flipper.setPosition(0.270);
+    }
+
     public void drive (GamepadEx gamepadEx1) {
         strafeSpeed = gamepadEx1.getLeftX();
         forwardSpeed = gamepadEx1.getLeftY();
         turnSpeed = gamepadEx1.getRightX();
         angle = gyro.getAbsoluteHeading();
-
         m_drive.driveFieldCentric(strafeSpeed, forwardSpeed, turnSpeed, angle);
     }
 
@@ -154,5 +169,6 @@ public class Robot {
         arm2.setPosition(0.450);
         gripper2.setPosition(0.390);
     }
+
 
 }

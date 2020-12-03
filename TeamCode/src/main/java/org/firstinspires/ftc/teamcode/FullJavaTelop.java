@@ -12,9 +12,11 @@ public class FullJavaTelop extends LinearOpMode {
 
     private GamepadEx gamepadEx1, gamepadEx2;
     private ButtonReader lArm, rArm,gTPread;
-    private ButtonReader inOut, flickRead, inIn, inStop;
-    int rightArmState = 0;
-    int leftArmState = 0;
+    private ButtonReader inOut, flickRead, inIn, inStop, powerS;
+
+    private int powershots = 0;
+    private int rightArmState = 0;
+    private int leftArmState = 0;
     public enum TeleOP {
         INTAKE,
         GOTOPOS,
@@ -35,6 +37,7 @@ public class FullJavaTelop extends LinearOpMode {
         lArm = new ButtonReader(gamepadEx1, GamepadKeys.Button.X);
         rArm = new ButtonReader(gamepadEx1, GamepadKeys.Button.A);
         gTPread = new ButtonReader(gamepadEx1, GamepadKeys.Button.DPAD_UP);
+        powerS = new ButtonReader(gamepadEx1, GamepadKeys.Button.DPAD_DOWN);
 
         //gm2
         inOut =  new ButtonReader(gamepadEx2, GamepadKeys.Button.Y);
@@ -50,6 +53,11 @@ public class FullJavaTelop extends LinearOpMode {
             gTPread.readValue();
             inOut.readValue();
             flickRead.readValue();
+            powerS.readValue();
+
+            if(powerS.wasJustReleased()){
+                powershots = (powershots + 1) % 2;
+            }
 
             switch (teleop) {
                 case INTAKE:
@@ -69,18 +77,27 @@ public class FullJavaTelop extends LinearOpMode {
                         teleop = TeleOP.GOTOPOS;
                     }
                 case GOTOPOS:
-                    telemetry.addData("state: ", "GoToPos");
-                    telemetry.update();
-                    GEarheads.intakeSTOP();
-                    GEarheads.gTP();
-                    teleop = TeleOP.SHOOT;
+                    if (powershots == 0) {
+                        telemetry.addData("state: ", "GoToPos");
+                        telemetry.update();
+                        GEarheads.intakeSTOP();
+                        GEarheads.gTP();
+                        teleop = TeleOP.SHOOT;
+                    } else if (powershots == 1){
+                        GEarheads.rev();
+                        telemetry.addData("state: ", "Powershots");
+                        telemetry.update();
+                    }
                 case  SHOOT:
                     telemetry.addData("state: ", "Shoot");
                     telemetry.update();
-                    if (flickRead.wasJustReleased()) {
+                    if (flickRead.wasJustReleased() && powershots == 0) {
                         GEarheads.flip3();
                         teleop = TeleOP.INTAKE;
+                    } else if  (flickRead.wasJustReleased() && powershots == 1) {
+                        GEarheads.flip();
                     }
+
             }
 
             if (inIn.wasJustReleased() && teleop != TeleOP.INTAKE) {
@@ -124,6 +141,9 @@ public class FullJavaTelop extends LinearOpMode {
 
             //tele-op drive
            GEarheads.drive(gamepadEx1);
+
+            telemetry.addData("state: ", teleop);
+            telemetry.update();
         }
     }
 }
